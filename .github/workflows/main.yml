@@ -1,4 +1,4 @@
-name: Windows VPS (Ngrok RDP)
+name: Windows VPS Ngrok RDP
 
 on: [workflow_dispatch]
 
@@ -19,13 +19,21 @@ jobs:
 
       - name: Enable RDP
         run: |
-          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
           net user runneradmin MyPassword123!
 
       - name: Start ngrok Tunnel
-        run: Start-Process -FilePath .\ngrok\ngrok.exe -ArgumentList "tcp 3389" -NoNewWindow
+        run: Start-Process -FilePath .\ngrok\ngrok.exe -ArgumentList "tcp 3389" -WindowStyle Hidden
 
-      - name: Show RDP Address
-        run
+      - name: Show RDP Info
+        run: |
+          Start-Sleep -Seconds 15
+          $tunnel = Invoke-RestMethod -Uri http://127.0.0.1:4040/api/tunnels
+          Write-Output "==============================="
+          Write-Output "👉 RDP Address: $($tunnel.tunnels[0].public_url)"
+          Write-Output "👉 User: runneradmin"
+          Write-Output "👉 Pass: MyPassword123!"
+          Write-Output "==============================="
+          Start-Sleep -Seconds 21600
